@@ -15,10 +15,9 @@ Requires Python 3.8+. Optional: `pip install tkinterdnd2` enables drag-and-drop 
 
 ```
 python dtf2pnt.py                    # opens the window
-python dtf2pnt.py A1933.DTF          # one file
-python dtf2pnt.py A1933.DTF --out C:\Out --skip-no-height
-python dtf2pnt.py A1.DTF A2.DTF      # several files
-python dtf2pnt.py C:\Surveys\Folder  # every .DTF in a folder
+python dtf2pnt.py A1933.DTF --out C:\Out   # one file
+python dtf2pnt.py A1.DTF A2.DTF --out C:\Out
+python dtf2pnt.py C:\Surveys\Folder --out C:\Out
 ```
 
 ## Windows .exe

@@ -7,10 +7,12 @@ Output format (one point per line, space separated):
 
 Usage:
     python dtf2pnt.py                                 -> opens the window (GUI)
-    python dtf2pnt.py FILE.DTF [...]                  -> converts each file to FILE.pnt
-    python dtf2pnt.py FOLDER                          -> converts every .DTF in the folder
-    python dtf2pnt.py FILE.DTF --out DIR              -> write results into DIR
-    python dtf2pnt.py FILE.DTF --skip-no-height       -> leave out points with Z = 0
+    python dtf2pnt.py FILE.DTF [...] --out DIR        -> converts each file into DIR
+    python dtf2pnt.py FOLDER --out DIR                -> converts every .DTF in the folder
+    python dtf2pnt.py ... --skip-no-height            -> leave out points with Z = 0
+
+The output folder is always chosen by you (--out is required); results are
+never written next to the originals unless you pick that folder yourself.
 """
 import os
 import struct
@@ -82,14 +84,17 @@ def write_pnt(points, out_path):
             f.write(f"{n} {x:.3f} {y:.3f} {z:.2f}\n")
 
 
-def convert(path, out_dir=None, skip_no_height=False):
-    """Convert one file. Returns (out_path, header, points_written, no_height)."""
+def convert(path, out_dir, skip_no_height=False):
+    """Convert one file into out_dir (always chosen by the user, never implied).
+    Returns (out_path, header, points_written, no_height)."""
+    if not out_dir:
+        raise ValueError("No output folder chosen")
     header, points = read_dtf(path)
     no_z = sum(1 for p in points if abs(p[3]) < 0.005)
     if skip_no_height:
         points = [p for p in points if abs(p[3]) >= 0.005]
     base = os.path.splitext(os.path.basename(path))[0] + ".pnt"
-    out_path = os.path.join(out_dir or os.path.dirname(os.path.abspath(path)), base)
+    out_path = os.path.join(out_dir, base)
     write_pnt(points, out_path)
     return out_path, header, len(points), no_z
 
@@ -121,8 +126,11 @@ def run_cli(args):
             skip = True
         else:
             paths.append(a)
-    if out_dir:
-        os.makedirs(out_dir, exist_ok=True)
+    if not out_dir:
+        print("ERR: choose where to save with --out FOLDER "
+              "(results are never saved next to the originals by default)")
+        return
+    os.makedirs(out_dir, exist_ok=True)
     for path in collect(paths):
         try:
             out, h, n, no_z = convert(path, out_dir, skip)
@@ -267,29 +275,28 @@ def run_gui():
     oi = ttk.Frame(opts, style="Card.TFrame")
     oi.pack(fill="x", padx=16, pady=12)
 
-    same_folder = tk.BooleanVar(value=True)
     out_dir = tk.StringVar(value="")
     skip_var = tk.BooleanVar(value=False)
 
-    ttk.Label(oi, text="Save results", style="Card.TLabel",
+    ttk.Label(oi, text="Save results to", style="Card.TLabel",
               font=(FONT, 10, "bold")).grid(row=0, column=0, sticky="w")
-    ttk.Radiobutton(oi, text="Next to each original file", value=True,
-                    variable=same_folder).grid(row=0, column=1, sticky="w", padx=(18, 0))
-    ttk.Radiobutton(oi, text="In folder:", value=False,
-                    variable=same_folder).grid(row=0, column=2, sticky="w", padx=(18, 0))
-    out_label = ttk.Label(oi, textvariable=out_dir, style="Muted.TLabel")
-    out_label.grid(row=0, column=3, sticky="w", padx=(8, 0))
-    oi.columnconfigure(3, weight=1)
+    out_label = ttk.Label(oi, style="Muted.TLabel",
+                          text="You will choose the folder when you click Convert")
+    out_label.grid(row=0, column=1, sticky="w", padx=(18, 0))
+    oi.columnconfigure(1, weight=1)
 
-    def pick_out():
-        d = filedialog.askdirectory(title="Choose output folder")
+    def choose_out():
+        d = filedialog.askdirectory(
+            title="Choose where to save the .PNT files",
+            initialdir=out_dir.get() or None, mustexist=False)
         if d:
             out_dir.set(d)
-            same_folder.set(False)
-    ttk.Button(oi, text="Browse…", style="Secondary.TButton",
-               command=pick_out).grid(row=0, column=4, sticky="e")
+            out_label.configure(text=d)
+        return d
+    ttk.Button(oi, text="Choose folder…", style="Secondary.TButton",
+               command=choose_out).grid(row=0, column=2, sticky="e")
     ttk.Checkbutton(oi, text="Leave out points without height (Z = 0)",
-                    variable=skip_var).grid(row=1, column=0, columnspan=5,
+                    variable=skip_var).grid(row=1, column=0, columnspan=3,
                                             sticky="w", pady=(10, 0))
 
     # ---- File table ------------------------------------------------------
@@ -379,13 +386,11 @@ def run_gui():
         if not state["files"]:
             messagebox.showinfo(APP_NAME, "Add some DTF files first.")
             return
-        target = None
-        if not same_folder.get():
-            target = out_dir.get()
-            if not target:
-                messagebox.showwarning(APP_NAME, "Choose an output folder first.")
-                return
-            os.makedirs(target, exist_ok=True)
+        target = choose_out()          # always ask where to save
+        if not target:
+            status.set("Cancelled — no output folder chosen")
+            return
+        os.makedirs(target, exist_ok=True)
         convert_btn.state(["disabled"])
         progress.pack(side="right")
         progress.configure(maximum=len(state["files"]), value=0)
