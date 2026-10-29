@@ -1,9 +1,12 @@
-name: Build Windows exe
+name: Build Windows installer
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -14,8 +17,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pyinstaller tkinterdnd2
-      - run: pyinstaller --onefile --windowed --collect-all tkinterdnd2 --name DTF2PNT dtf2pnt.py
+      - run: pyinstaller --onefile --windowed --icon icon.ico --collect-all tkinterdnd2 --name DTF2PNT dtf2pnt.py
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc installer.iss
       - uses: actions/upload-artifact@v4
         with:
-          name: DTF2PNT-windows
-          path: dist/DTF2PNT.exe
+          name: DTF2PNT-Setup
+          path: installer_out/DTF2PNT-Setup.exe
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag 2>$null
+          gh release create latest installer_out/DTF2PNT-Setup.exe --title "DTF to PNT Converter (latest)" --notes "Download DTF2PNT-Setup.exe and run it. It installs to Program Files and adds a desktop shortcut."

@@ -20,14 +20,13 @@ python dtf2pnt.py A1.DTF A2.DTF --out C:\Out
 python dtf2pnt.py C:\Surveys\Folder --out C:\Out
 ```
 
-## Windows .exe
+## Install on Windows
 
-Download `DTF2PNT-windows` from the latest run in the **Actions** tab, or build locally:
-
-```
-pip install pyinstaller
-pyinstaller --onefile --windowed --name DTF2PNT dtf2pnt.py
-```
+Download **DTF2PNT-Setup.exe** from the [latest release](../../releases/latest) and run it.
+It installs the app to `C:\Program Files\DTF to PNT Converter`, adds a Start Menu entry and
+(optionally, ticked by default) a desktop shortcut, and registers an uninstaller in
+Windows Settings > Apps. The installer is built automatically by GitHub Actions
+(`installer.iss`, Inno Setup).
 
 ## DTF format
 
