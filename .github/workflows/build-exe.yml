@@ -13,8 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pyinstaller
-      - run: pyinstaller --onefile --windowed --name DTF2PNT dtf2pnt.py
+      - run: pip install pyinstaller tkinterdnd2
+      - run: pyinstaller --onefile --windowed --collect-all tkinterdnd2 --name DTF2PNT dtf2pnt.py
       - uses: actions/upload-artifact@v4
         with:
           name: DTF2PNT-windows

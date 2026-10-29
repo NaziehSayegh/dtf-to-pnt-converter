@@ -11,7 +11,7 @@ Empty slots are dropped; original point numbers are kept. Output uses CR LF line
 
 ## Use
 
-Requires Python 3.8+ (no extra packages). Running with no arguments opens the window: add files or a folder, choose where to save, click **Convert all**.
+Requires Python 3.8+. Optional: `pip install tkinterdnd2` enables drag-and-drop of files and folders onto the window (the .exe includes it). Running with no arguments opens the window: add files or a folder, choose where to save, click **Convert all**.
 
 ```
 python dtf2pnt.py                    # opens the window

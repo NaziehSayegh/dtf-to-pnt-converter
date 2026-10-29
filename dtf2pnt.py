@@ -157,7 +157,13 @@ def run_gui():
     ERR = "#B91C1C"
 
     import tkinter.font as tkfont
-    root = tk.Tk()
+    try:                                   # optional: drag-and-drop support
+        from tkinterdnd2 import DND_FILES, TkinterDnD
+        root = TkinterDnD.Tk()
+        dnd = True
+    except Exception:
+        root = tk.Tk()
+        dnd = False
     families = set(tkfont.families(root))
     FONT = next((f for f in ("Segoe UI", "SF Pro Text", "Helvetica Neue", "Ubuntu",
                              "DejaVu Sans") if f in families), "TkDefaultFont")
@@ -310,8 +316,8 @@ def run_gui():
 
     empty = tk.Label(table_card, bg=CARD, fg=MUTED, justify="center",
                      font=(FONT, 11),
-                     text="No files yet\n\nUse  “Add files”  or  “Add folder”  "
-                          "to choose your .DTF survey files.\nResults are saved as .PNT files.")
+                     text="No files yet\n\n" + ("Drag and drop .DTF files or folders here,\nor use " if dnd else "Use ")
+                          + "“Add files” / “Add folder”.\nResults are saved as .PNT files.")
     empty.place(relx=0.5, rely=0.5, anchor="center")
 
     # ---- Footer ----------------------------------------------------------
@@ -418,6 +424,14 @@ def run_gui():
             subprocess.Popen(["open", d])
         else:
             subprocess.Popen(["xdg-open", d])
+
+    if dnd:
+        def on_drop(event):
+            add_paths(root.tk.splitlist(event.data))
+            return event.action
+        for w in (root, tree, empty, table_card):
+            w.drop_target_register(DND_FILES)
+            w.dnd_bind("<<Drop>>", on_drop)
 
     root.bind("<Delete>", lambda e: [
         (state["files"].pop(i, None), tree.delete(i)) for i in tree.selection()
