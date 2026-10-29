@@ -11,11 +11,12 @@ Empty slots are dropped; original point numbers are kept. Output uses CR LF line
 
 ## Use
 
-Requires Python 3.8+ (no extra packages).
+Requires Python 3.8+ (no extra packages). Running with no arguments opens the window: add files or a folder, choose where to save, click **Convert all**.
 
 ```
 python dtf2pnt.py                    # opens the window
 python dtf2pnt.py A1933.DTF          # one file
+python dtf2pnt.py A1933.DTF --out C:\Out --skip-no-height
 python dtf2pnt.py A1.DTF A2.DTF      # several files
 python dtf2pnt.py C:\Surveys\Folder  # every .DTF in a folder
 ```
